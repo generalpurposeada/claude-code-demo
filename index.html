@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>To-do</title>
+  <style>
+    :root { --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --line: #e7e5e4; --accent: #2563eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1c1917; --fg: #f5f5f4; --muted: #a8a29e; --line: #44403c; --accent: #60a5fa; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 32rem; margin: 3rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+    form { display: flex; gap: .5rem; }
+    input[type=text] { flex: 1; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; font: inherit; }
+    button { font: inherit; cursor: pointer; }
+    form button { padding: .5rem 1rem; border: 0; border-radius: 6px; background: var(--accent); color: #fff; }
+    ul { list-style: none; padding: 0; margin: 1rem 0 0; }
+    li { display: flex; align-items: center; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--line); }
+    li label { flex: 1; display: flex; gap: .75rem; align-items: center; cursor: pointer; overflow-wrap: anywhere; }
+    li.done span { text-decoration: line-through; color: var(--muted); }
+    .remove { border: 0; background: none; color: var(--muted); font-size: 1.25rem; line-height: 1; padding: .25rem .5rem; }
+    .remove:hover { color: #dc2626; }
+    .empty { color: var(--muted); margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>To-do</h1>
+    <form id="add">
+      <input id="text" type="text" placeholder="What needs doing?" autocomplete="off" required>
+      <button type="submit">Add</button>
+    </form>
+    <ul id="list"></ul>
+    <p id="empty" class="empty">Nothing to do yet.</p>
+  </main>
+  <script>
+    const KEY = 'todos';
+    const list = document.getElementById('list');
+    const empty = document.getElementById('empty');
+    const input = document.getElementById('text');
+    let todos = [];
+    try { todos = JSON.parse(localStorage.getItem(KEY)) || []; } catch {}
+
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(todos)); } catch {} }
+
+    function render() {
+      list.replaceChildren();
+      todos.forEach((t, i) => {
+        const li = document.createElement('li');
+        li.className = t.done ? 'done' : '';
+        const label = document.createElement('label');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = t.done;
+        box.addEventListener('change', () => { t.done = box.checked; save(); render(); });
+        const span = document.createElement('span');
+        span.textContent = t.text;
+        label.append(box, span);
+        const del = document.createElement('button');
+        del.className = 'remove';
+        del.textContent = '×';
+        del.setAttribute('aria-label', 'Remove "' + t.text + '"');
+        del.addEventListener('click', () => { todos.splice(i, 1); save(); render(); });
+        li.append(label, del);
+        list.append(li);
+      });
+      empty.hidden = todos.length > 0;
+    }
+
+    document.getElementById('add').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      todos.push({ text, done: false });
+      input.value = '';
+      save();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
