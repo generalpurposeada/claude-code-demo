@@ -3,5 +3,18 @@
     "deny": [
       "Read(./private-notes.txt)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-claude-md.js\""
+          }
+        ]
+      }
+    ]
   }
 }
